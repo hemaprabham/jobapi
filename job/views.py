@@ -9,6 +9,8 @@ from .serializers import *
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from rest_framework.serializers import ValidationError
+
 
 
 #vendors
@@ -108,12 +110,12 @@ def add_purchase_order(request):
         received_data = json.loads(request.body)
         serializer_check = PurchaseOrderSerializer(data=received_data)
         
-        if serializer_check.is_valid():
+        try:
+            serializer_check.is_valid(raise_exception=True)
             serializer_check.save()
             return HttpResponse(json.dumps({"status": "purchase addedd success"}))
-        else:
-            return HttpResponse(json.dumps({"status": "purchase adding failed"}))
-
+        except ValidationError as e:
+            return HttpResponse(json.dumps({"status": "purchase adding failed", "errors": e.detail}), status=400)
 
 @api_view(['GET'])
 def list_purchase_orders(request):
@@ -182,13 +184,13 @@ def add_historical_performance(request):
     if request.method == "POST":
         received_data = json.loads(request.body)
         serializer_check = HistoricalPerformanceSerializer(data=received_data)
-        
-        if serializer_check.is_valid():
-            serializer_check.save()
-            return HttpResponse(json.dumps({"status": "order addedd success"}))
-        else:
-            return HttpResponse(json.dumps({"status": "order adding failed"}))
 
+        try:
+            serializer_check.is_valid(raise_exception=True)
+            serializer_check.save()
+            return HttpResponse(json.dumps({"status": "historical performance added successfully"}))
+        except ValidationError as e:
+            return HttpResponse(json.dumps({"status": "historical performance adding failed", "errors": e.detail}), status=400)
 @api_view(['GET'])
 def list_historical_performances(request):
     if request.method == 'GET':
